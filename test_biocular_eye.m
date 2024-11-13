@@ -27,7 +27,6 @@ rightCameraFocalLength = 0.0077;
 baselineOfTwoEyes = [leftEyePositionInGlobalReferrenceFrame, rightEyePositionInGlobalReferrenceFrame];
 visualAxisLength = 0.01;
 
-
 % draw two eyes with ray tracing show test
 figure(1);
 ax =axes();
@@ -47,6 +46,9 @@ rightEyeParameters = drawEyeAndCameraSystemWithParameters(ax, rightEyePositionIn
                                                           rightEyeAngleHorizontal, rightEyeAngleVertical, rightCameraTrans_R, rightCameraTrans_t,rightCameraFocalLength, visualAxisLength);
 drawPupilImagingBasedOnRayTracing(ax, rightEyeParameters);
 plot3(baselineOfTwoEyes(1,:),baselineOfTwoEyes(2,:),baselineOfTwoEyes(3,:),'k--');
+
+intersectionOfVisualAxisAndOpticalAxisOffsetInLeftEyeFrame = norm((leftEyeParameters.eyeBallCenter(:,2)+leftEyeParameters.eyeBallCenter(:,3))/2-leftEyeParameters.eyeBallCenter(:,1));
+intersectionOfVisualAxisAndOpticalAxisOffsetInRightEyeFrame = norm((rightEyeParameters.eyeBallCenter(:,2)+rightEyeParameters.eyeBallCenter(:,3))/2-rightEyeParameters.eyeBallCenter(:,1));
 
 %% 生成凝视点坐标
 figure(1);
@@ -72,8 +74,8 @@ leftEyeAngles = zeros([2,size(intersecionsOfVisualAxisInLeftEyeInitReferrenceFra
 rightEyeAngles = zeros([2,size(intersecionsOfVisualAxisInLeftEyeInitReferrenceFrame,2)]);
 
 for i=1:size(intersecionsOfVisualAxisInLeftEyeInitReferrenceFrame,2)
-    [leftEyeAngle1, leftEyeAngle2] = computeEyeOrientationAngles(intersecionsOfVisualAxisInLeftEyeInitReferrenceFrame(:,i), leftKappaCalibrationVecterInLeftEyeFrame);
-    [rightEyeAngle1, rightEyeAngle2] = computeEyeOrientationAngles(intersecionsOfVisualAxisInRightEyeInitReferrenceFrame(:,i), rightKappaCalibrationVecterInRightEyeFrame);
+    [leftEyeAngle1, leftEyeAngle2] = computeEyeOrientationAngles(intersecionsOfVisualAxisInLeftEyeInitReferrenceFrame(:,i), leftKappaCalibrationVecterInLeftEyeFrame, intersectionOfVisualAxisAndOpticalAxisOffsetInLeftEyeFrame);
+    [rightEyeAngle1, rightEyeAngle2] = computeEyeOrientationAngles(intersecionsOfVisualAxisInRightEyeInitReferrenceFrame(:,i), rightKappaCalibrationVecterInRightEyeFrame, intersectionOfVisualAxisAndOpticalAxisOffsetInRightEyeFrame);
 
     leftEyeAngles(:,i) = [leftEyeAngle1; leftEyeAngle2];
     rightEyeAngles(:,i) = [rightEyeAngle1; rightEyeAngle2];
@@ -81,7 +83,7 @@ for i=1:size(intersecionsOfVisualAxisInLeftEyeInitReferrenceFrame,2)
 end
 
 %% 测试根据视轴反向求解眼球姿态的结果
-i=25;
+i=72;
 leftEyeParameters = drawEyeAndCameraSystemWithParameters(ax, leftEyePositionInGlobalReferrenceFrame, leftEyeInitReferrenceFrameToGlobalReferrenceFrame, leftKappaCalibrationVecterInLeftEyeFrame, ...
                                                          leftEyeAngles(1,i)/pi*180,  leftEyeAngles(2,i)/pi*180, leftCameraTrans_R, leftCameraTrans_t,leftCameraFocalLength, norm(intersecionsOfVisualAxisInLeftEyeInitReferrenceFrame(:,i)));
 rightEyeParameters = drawEyeAndCameraSystemWithParameters(ax, rightEyePositionInGlobalReferrenceFrame, rightEyeInitReferrenceFrameToGlobalReferrenceFrame, rightKappaCalibrationVecterInRightEyeFrame, ...
@@ -93,6 +95,7 @@ rightVisualAxisViaPointInGlobalReferrenceFrame = (rightEyeParameters.eyeBallCent
 leftVisualAxisDirectionInGlobalReferenceFrame = leftEyeInitReferrenceFrameToGlobalReferrenceFrame * eul2rotm([leftEyeAngles(1,i),leftEyeAngles(2,i),0],'XYZ')*leftKappaCalibrationVecterInLeftEyeFrame;
 rightVisualAxisDirectionInGlobalReferenceFrame = rightEyeInitReferrenceFrameToGlobalReferrenceFrame * eul2rotm([rightEyeAngles(1,i),rightEyeAngles(2,i),0],'XYZ')*rightKappaCalibrationVecterInRightEyeFrame;
 
-visualAxisIntersectionPointInGlobalReferenceFrame = computeTwoLinesIntersectionPoint(leftVisualAxisViaPointInGlobalReferrenceFrame,leftVisualAxisDirectionInGlobalReferenceFrame, rightVisualAxisViaPointInGlobalReferrenceFrame,rightVisualAxisDirectionInGlobalReferenceFrame);
+calculatedVisualAxisIntersectionPointInGlobalReferenceFrame = computeTwoLinesIntersectionPoint(leftVisualAxisViaPointInGlobalReferrenceFrame,leftVisualAxisDirectionInGlobalReferenceFrame, rightVisualAxisViaPointInGlobalReferrenceFrame,rightVisualAxisDirectionInGlobalReferenceFrame);
+plot3(calculatedVisualAxisIntersectionPointInGlobalReferenceFrame(1),calculatedVisualAxisIntersectionPointInGlobalReferenceFrame(2),calculatedVisualAxisIntersectionPointInGlobalReferenceFrame(3),'r*');
 
 
